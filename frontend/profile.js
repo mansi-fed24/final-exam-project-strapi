@@ -120,8 +120,10 @@ async function displayRatedBooks(sortBy = "rating") {
 
     try {
          // Fetch the user data including ratings
-        const response = await axios.get(`${BASE_URL}/api/users/me?populate=ratings`, {
+        //const response = await axios.get(`${BASE_URL}/api/users/me?populate=ratings`, {
+         const response = await axios.get(`${BASE_URL}/api/users/me?populate[ratings][populate][book]=*`, {
             headers: { Authorization: `Bearer ${token}` },
+
         });
 
          console.log("Rated books response:", response.data); // Log the entire response

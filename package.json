@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@strapi/plugin-color-picker": "^5.13.0"
+    "@strapi/plugin-color-picker": "^5.13.0",
+    "strapi-v5-plugin-populate-deep": "^4.0.5"
   }
 }

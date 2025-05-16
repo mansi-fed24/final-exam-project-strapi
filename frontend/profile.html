@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookDucks - Profile</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.8.4/axios.min.js"></script>
+    <script src="script.js" defer></script>
+    <script src="theme.js" defer></script>
+    <script src="profile.js" defer></script>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+    <h1>BookDucks</h1>
+    <div class="nav-links" id="nav-links"></div>
+          
+        
+    
+</nav>
+
+
+<div class="main-content">
+<div class="profile-container">
+    
+    <!-- To Read Section -->
+    
+    <section class="to-read-section">
+        <h2>To Read List</h2>
+        <div class="filter-container">
+            <label for="to-read-sort">Sort By:</label>
+            <select id="to-read-sort" onchange="sortToReadList()">
+                <option value="title">Title</option>
+                <option value="author">Author</option>
+            </select>
+        </div>
+    
+        <div id="to-read-list" class="book-list"></div>
+    </section>
+    
+     <!-- Rated Books Section -->
+    <section class="rated-books-section">
+        <h2>Rated Books</h2>
+        <div class="filter-container">
+            <label for="rated-sort">Sort By:</label>
+            <select id="rated-sort" onchange="sortRatedBooks()">
+                <option value="rating">Rating (High to Low)</option>
+                <option value="title">Title</option>
+                <option value="author">Author</option>
+            </select>
+        </div>
+    
+        <div id="rated-books-list" class="book-list"></div>
+    </section>
+</div>
+
+</body>
+</html>

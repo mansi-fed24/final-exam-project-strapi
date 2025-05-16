@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookDucks - Home</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.8.4/axios.min.js" integrity="sha512-2A1+/TAny5loNGk3RBbk11FwoKXYOMfAK6R7r4CpQH7Luz4pezqEGcfphoNzB7SM4dixUoJsKkBsB6kg+dNE2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="script.js" defer></script>
+    <script src="theme.js" defer></script>
+    <script src="profile.js" defer></script>
     
 </head>
 <body>
@@ -15,26 +18,25 @@
 <nav>
     <h1>BookDucks</h1>
     <div class="nav-links" id="nav-links">
+        <button onclick="showHome()">Home</button>
+        <button onclick="showProfile()">Profile</button>
+        <button onclick="handleLogout()">Logout</button>
         <button onclick="showLogin()">Login</button>
         <button onclick="showRegister()">Register</button>
-        <button onclick="showProfile()">Profile</button> <!-- New Profile Button -->
     </div>
 </nav>
 
 <!-- Main Content Area -->
-<div class="main-content">
+<div class="main-content" id="main-content">
 
     <!-- Book Display Area -->
     <section id="books-container" class="books-container">
-        <h2>All Books</h2>
-        <div id="book-list" class="book-list"></div>
+        
+         <h2>Welcome to BookDucks</h2>
+        <p>Discover your next favorite book and add it to your reading list.</p>
+        <div id="book-list" class="books-grid"></div>
     </section>
-    <!-- User Profile Section -->
-    <div id="profile-container" class="profile-container" style="display: none;">
-        <h2>Your To Read List</h2>
-        <div id="to-read-list" class="book-list"></div>
-    </div>
-
+    
 
     <!-- Modal Overlay for Authentication -->
     <div id="auth-modal" class="modal-overlay" style="display: none;">
@@ -46,7 +48,7 @@
                 <input type="text" placeholder="Email" id="login-email" />
                 <input type="password" placeholder="Password" id="login-password" />
                 <button onclick="handleLogin()">Login</button>
-                <!-- Removed Close button here -->
+                
             </div>
 
             <div class="form-card" id="register-form" style="display: none;">
@@ -55,7 +57,7 @@
                 <input type="email" placeholder="Email" id="register-email" />
                 <input type="password" placeholder="Password" id="register-password" />
                 <button onclick="handleRegister()">Register</button>
-                <!-- Removed Close button here -->
+                
             </div>
         </div>
     </div>

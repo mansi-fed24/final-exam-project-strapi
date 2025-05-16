@@ -1,6 +1,46 @@
+console.log("Profile JS loaded");
+
 const BASE_URL = "http://localhost:1337";
 
-// ✅ Function to Check and Display User Info
+// Function to Navigate to Home Page
+function showHome() {
+    window.location.href = "index.html";
+}
+
+//  Function to Navigate to Profile Page
+function showProfile() {
+    window.location.href = "profile.html";
+}
+
+//  Function to Handle Logout
+function handleLogout() {
+    sessionStorage.removeItem("token");
+    window.location.href = "index.html";  // Redirect to home after logout
+}
+
+function updateNavbar() {
+    const token = sessionStorage.getItem("token");
+    const navLinks = document.getElementById("nav-links");
+
+    if (token) {
+        navLinks.innerHTML = `
+            <button onclick="showHome()">Home</button>
+            <button onclick="showProfile()">Profile</button>
+            <button onclick="handleLogout()">Logout</button>
+        `;
+    } else {
+        navLinks.innerHTML = `
+            <button onclick="showLogin()">Login</button>
+            <button onclick="showRegister()">Register</button>
+        `;
+    }
+}
+
+//  Initialize on Page Load
+document.addEventListener("DOMContentLoaded", updateNavbar);
+
+
+// Function to Check and Display User Info
 async function checkUserLogin() {
     const navLinks = document.getElementById("nav-links");
     const token = sessionStorage.getItem("token");
@@ -18,7 +58,8 @@ async function checkUserLogin() {
 
             // Update Navbar
             navLinks.innerHTML = `
-                <span>Welcome, ${user.username}</span>
+                <span class="highlighted-text">Welcome, ${user.username}</span>
+                <button onclick="showHome()">Home</button>
                 <button onclick="showProfile()">Profile</button> <!-- Add Profile Button -->
                 <button onclick="handleLogout()">Logout</button>
             `;
@@ -35,17 +76,13 @@ async function checkUserLogin() {
     }
 }
 
-// ✅ Function to Handle Logout
-function handleLogout() {
-    sessionStorage.removeItem("token");
-    location.reload(); // Refresh to update the navbar
-}
 
-
-// ✅ Function to Display All Books
+//  Function to Display All Books
 async function displayBooks() {
+    const token = sessionStorage.getItem("token");
     const bookList = document.getElementById("book-list");
     bookList.innerHTML = "";  // Clear previous content
+    
 
     try {
         const response = await axios.get(`${BASE_URL}/api/books?populate=*`);
@@ -61,7 +98,6 @@ async function displayBooks() {
         books.forEach(book => {
             const bookItem = document.createElement("div");
             bookItem.classList.add("book-item");
-
             const bookData = book.attributes || book;  // Adjust for structure
 
 
@@ -78,6 +114,15 @@ async function displayBooks() {
                 }
             }
 
+            // build HTML with or without "To Read" and rating button
+            let extraButtons = "";
+            if (token) {
+                extraButtons = `
+                    <button onclick="addToRead('${book.id}')">Add To Read</button>
+                    <button onclick="showRatingForm('${book.id}')">Rate</button>
+                `;
+            }
+
             // Construct Book HTML
             bookItem.innerHTML = `
                 <h3>${bookData.title}</h3>
@@ -86,7 +131,10 @@ async function displayBooks() {
                 <p>Release Date: ${bookData.release_date}</p>
                 <p>Average Rating: ${averageRating}</p>
                 <img src="${BASE_URL}${bookData.cover_image.url}" width="100" alt="${bookData.title}" />
-                <button onclick="addToRead('${book.id}')">Add To Read</button>
+                 ${extraButtons}
+                <div id="rating-form-container-${book.id}" style="display:none;">
+                                       
+                </div>
             `;
 
             bookList.appendChild(bookItem);
@@ -98,7 +146,8 @@ async function displayBooks() {
     }
 }
 
-// ✅ Function to Add a Book to "To Read" List
+
+//  Function to Add a Book to "To Read" List
 async function addToRead(bookId) {
     console.log(`Attempting to add book ID ${bookId} to To Read list`);
 
@@ -157,8 +206,97 @@ async function addToRead(bookId) {
     }
 };
 
+//  Function to Show Rating Form
+function showRatingForm(bookId) {   
+    const ratingFormContainer = document.getElementById(`rating-form-container-${bookId}`);
+    const ratingForm = `
+        <form id="rating-form-${bookId}" onsubmit="submitRating(event, '${bookId}')">
+            <label for="rating">Rate this book (1-10):</label>
+            <select id="rating-${bookId}" name="rating" required>
+                        <option value="">Select Rating</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
 
-// ✅ Function to Show Login Form
+            </select>
+            <button onclick="submitRating('${bookId}')">Submit Rating</button>
+        </form>
+    `;
+    ratingFormContainer.innerHTML = ratingForm;
+    ratingFormContainer.style.display = "block"; // Show the form
+}
+
+
+
+// Function to Submit Rating for a Book
+async function submitRating(bookId) {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+        alert("You must be logged in to rate books.");
+        return;
+    }
+
+    const ratingSelect = document.getElementById(`rating-${bookId}`);
+    const ratingValue = ratingSelect.value;
+
+    if (!ratingValue) {
+        alert("Please select a rating before submitting.");
+        return;
+    }
+
+     try {
+        // Fetch user data to get the user ID
+        const userResponse = await axios.get(`${BASE_URL}/api/users/me`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const user = userResponse.data;
+        const userId = user.id;
+        console.log("User ID:", userId);
+
+        console.log("Submitting rating:", ratingValue, "for book ID:", bookId, "by user ID:", userId);
+        
+        const response = await axios.post(
+            `${BASE_URL}/api/ratings`,
+            {
+                data: {
+                    rating: parseInt(ratingValue),
+                    book: bookId,
+                    users_permissions_user: userId // Associate the user with the rating
+                },
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        console.log("Rating submitted:", response.data);
+        alert("Rating submitted successfully!");
+
+        // Optionally, refresh the book list to update the average rating
+        displayBooks();
+        
+            
+
+    } catch (err) {
+        console.log("Error submitting rating:", err);
+        alert("Error submitting rating. Please try again.");
+    }
+}
+
+
+// Function to Show Login Form
 function showLogin() {
     document.getElementById('auth-modal').style.display = 'flex'; // Show modal
     document.getElementById('login-form').style.display = 'block'; // Show login form
@@ -176,7 +314,7 @@ function closeModal() {
 }
 
 
-// ✅ Function to Handle Login
+//  Function to Handle Login
 async function handleLogin() {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
@@ -201,7 +339,7 @@ async function handleLogin() {
     }
 }
 
-// ✅ Function to Handle Registration
+//  Function to Handle Registration
 async function handleRegister() {
     const username = document.getElementById('register-username').value;
     const email = document.getElementById('register-email').value;
@@ -223,7 +361,7 @@ async function handleRegister() {
     }
 }
 
-// ✅ Execute displayBooks() on Page Load
+//  Execute displayBooks() on Page Load
 //document.addEventListener("DOMContentLoaded", displayBooks);
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -231,104 +369,4 @@ document.addEventListener("DOMContentLoaded", () => {
     checkUserLogin();  // Check user login status on page load
 });
 
- // Function to show the profile page
-    function showProfile() {
-        document.getElementById('books-container').style.display = 'none';
-        document.getElementById('profile-container').style.display = 'block';
-        displayToReadList(); // Load To Read list
-    }
-    // Function to show the books section
-    function showBooks() {
-        document.getElementById('profile-container').style.display = 'none';
-        document.getElementById('books-container').style.display = 'block';
-        displayBooks(); // Load books
-    }
-
-// ✅ Function to Display the To Read List
-async function displayToReadList() {
-    const token = sessionStorage.getItem("token");
-
-    if (!token) {
-        console.log("User is not logged in.");
-        return;
-    }
-
-    try {
-        const response = await axios.get(`${BASE_URL}/api/users/me?populate=toReads`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        const user = response.data;
-        console.log("User Data with To Read List:", user);
-
-        const toReadList = user.toReads || [];
-        const toReadContainer = document.getElementById("to-read-list");
-        toReadContainer.innerHTML = "";
-
-        if (toReadList.length === 0) {
-            toReadContainer.innerHTML = "<p>Your To Read list is empty.</p>";
-            return;
-        }
-
-        toReadList.forEach(book => {
-            const bookItem = document.createElement("div");
-            bookItem.classList.add("book-item");
-
-            bookItem.innerHTML = `
-                <h3>${book.title}</h3>
-                <p>Author: ${book.author}</p>
-                <button onclick="removeFromToRead(${book.id})">Remove</button>
-            `;
-
-            toReadContainer.appendChild(bookItem);
-        });
-
-        // Show the profile container
-        document.getElementById("profile-container").style.display = "block";
-
-    } catch (err) {
-        console.log("Error fetching To Read list:", err);
-    }
-}
-
-// ✅ Function to Remove from To Read List
-async function removeFromToRead(bookId) {
-    const token = sessionStorage.getItem("token");
-
-    if (!token) {
-        alert("You need to be logged in to remove books.");
-        return;
-    }
-
-    try {
-        const response = await axios.get(`${BASE_URL}/api/users/me?populate=toReads`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        let user = response.data;
-        let currentToReads = user.toReads ? user.toReads.map(book => book.id) : [];
-
-        // Remove the book ID from the list
-        currentToReads = currentToReads.filter(id => id !== bookId);
-
-        // Update the toReads list
-        await axios.put(`${BASE_URL}/api/users/${user.id}`, {
-            toReads: currentToReads,
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        alert("Book removed from To Read list.");
-        displayToReadList(); // Refresh the list
-
-    } catch (err) {
-        console.log("Error removing from To Read list:", err);
-        alert("Error removing book from To Read list.");
-    }
-}
+ 
